@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reading Assistant</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        #text-input {
+            width: 100%;
+            height: 100px;
+            resize: none;
+        }
+
+        #display-area {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        #controls {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Reading Assistant</h1>
+
+    <label for="text-input">Paste your text:</label>
+    <textarea id="text-input" placeholder="Enter text here..."></textarea>
+
+    <label for="modality">Select modality:</label>
+    <select id="modality">
+        <option value="sublexical">Sublexical</option>
+    </select>
+
+    <label for="string-speed">String speed (milliseconds):</label>
+    <input type="number" id="string-speed">
+
+    <label for="whitespace-speed">Whitespace speed (milliseconds):</label>
+    <input type="number" id="whitespace-speed">
+
+    <label for="font-size">Font size:</label>
+    <input type="number" id="font-size">
+
+    <label for="line-spacing">Line spacing:</label>
+    <input type="number" id="line-spacing">
+
+    <button onclick="startReading()">Start Reading</button>
+
+    <script>
+        // Variables to store original settings
+        var originalText = '';
+        var originalStringSpeed = 0;
+        var originalWhitespaceSpeed = 0;
+        var originalFontSize = 0;
+        var originalLineSpacing = 0;
+        var isPaused = false;
+        var displayTimeout;
+        var words; // Added variable to store the words
+        var index = 0; // Moved the index variable here
+
+        function startReading() {
+            // Store original settings
+            originalText = document.getElementById('text-input').value;
+            originalStringSpeed = document.getElementById('string-speed').value;
+            originalWhitespaceSpeed = document.getElementById('whitespace-speed').value;
+            originalFontSize = document.getElementById('font-size').value;
+            originalLineSpacing = document.getElementById('line-spacing').value;
+
+            // Display second page for reading
+            document.body.innerHTML = `
+                <h1>Reading Assistant</h1>
+                <div id="display-area" style="font-size: ${originalFontSize}px; line-height: ${originalLineSpacing}px;"></div>
+                <div id="controls">
+                    <button onclick="togglePause()">Pause/Resume</button>
+                    <button onclick="goBackToPage1()">Go Back</button>
+                </div>
+            `;
+
+            // Split the text into words
+            words = originalText.split(/([\s-]+)/);
+
+            // Start the sublexical reading
+            startSublexicalReading(originalStringSpeed, originalWhitespaceSpeed);
+        }
+
+        function startSublexicalReading(stringSpeed, whitespaceSpeed) {
+            var displayArea = document.getElementById('display-area');
+
+            function displayWord() {
+                if (index < words.length && !isPaused) {
+                    var word = words[index];
+
+                    // Remove dashes and display the text horizontally
+                    var cleanWord = word.replace(/-/g, '');
+                    displayArea.innerHTML += cleanWord;
+
+                    // Check if the current word ends with whitespace in the original text
+                    if (/\s+$/.test(word)) {
+                        displayArea.innerHTML += ' ';
+                    }
+
+                    index++;
+                    displayTimeout = setTimeout(displayWord, (/\s/.test(word) ? parseInt(whitespaceSpeed) : parseInt(stringSpeed)));
+                }
+            }
+
+            // Start the sublexical reading
+            displayWord();
+        }
+
+        // Toggle pause/resume
+        function togglePause() {
+            isPaused = !isPaused;
+            clearTimeout(displayTimeout);
+            if (!isPaused) {
+                // Resume reading
+                startSublexicalReading(originalStringSpeed, originalWhitespaceSpeed);
+            }
+        }
+
+        function goBackToPage1() {
+    // Clear display area
+    document.getElementById('display-area').innerHTML = '';
+
+    // Reset index
+    index = 0;
+
+    // Reset pause state
+    isPaused = false;
+
+    // Display the first page without resetting text and settings
+    document.body.innerHTML = `
+        <h1>Reading Assistant</h1>
+        <label for="text-input">Paste your text:</label>
+        <textarea id="text-input" placeholder="Enter text here...">${originalText}</textarea>
+
+        <label for="modality">Select modality:</label>
+        <select id="modality">
+            <option value="sublexical">Sublexical</option>
+        </select>
+
+        <label for="string-speed">String speed (milliseconds):</label>
+        <input type="number" id="string-speed" value="${originalStringSpeed}">
+
+        <label for="whitespace-speed">Whitespace speed (milliseconds):</label>
+        <input type="number" id="whitespace-speed" value="${originalWhitespaceSpeed}">
+
+        <label for="font-size">Font size:</label>
+        <input type="number" id="font-size" value="${originalFontSize}">
+
+        <label for="line-spacing">Line spacing:</label>
+        <input type="number" id="line-spacing" value="${originalLineSpacing}">
+
+        <button onclick="startReading()">Start Reading</button>
+    `;
+}
+
+	</script>
+</body>
+</html>

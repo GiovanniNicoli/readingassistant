@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reading Assistant</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        #text-input {
+            width: 100%;
+            height: 100px;
+            resize: none;
+        }
+
+        #display-area {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        #controls {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Reading Assistant</h1>
+
+    <label for="text-input">Paste your text:</label>
+    <textarea id="text-input" placeholder="Enter text here..."></textarea>
+
+    <label for="modality">Select modality:</label>
+    <select id="modality">
+        <option value="phonological">Phonological</option>
+    </select>
+
+    <label for="string-speed">String speed (milliseconds):</label>
+    <input type="number" id="string-speed">
+
+    <label for="whitespace-speed">Whitespace speed (milliseconds):</label>
+    <input type="number" id="whitespace-speed">
+
+    <label for="font-size">Font size:</label>
+    <input type="number" id="font-size">
+
+    <label for="line-spacing">Line spacing:</label>
+    <input type="number" id="line-spacing">
+
+    <button onclick="startReading()">Start Reading</button>
+
+    <script>
+        // Variables to store original settings
+        var originalText = '';
+        var originalStringSpeed = 0;
+        var originalWhitespaceSpeed = 0;
+        var originalFontSize = 0;
+        var originalLineSpacing = 0;
+        var isPaused = false;
+        var displayTimeout;
+        var index = 0; // Moved the index variable here
+
+        function startReading() {
+            // Store original settings
+            originalText = document.getElementById('text-input').value;
+            originalStringSpeed = document.getElementById('string-speed').value;
+            originalWhitespaceSpeed = document.getElementById('whitespace-speed').value;
+            originalFontSize = document.getElementById('font-size').value;
+            originalLineSpacing = document.getElementById('line-spacing').value;
+
+            // Display second page for reading
+            document.body.innerHTML = `
+                <h1>Reading Assistant</h1>
+                <div id="display-area" style="font-size: ${originalFontSize}px; line-height: ${originalLineSpacing}px;"></div>
+                <div id="controls">
+                    <button onclick="togglePause()">Pause/Resume</button>
+                    <button onclick="goBackToPage1()">Go Back</button>
+                </div>
+            `;
+
+            // Start the phonological reading
+            startPhonologicalReading(originalText, originalStringSpeed, originalWhitespaceSpeed);
+        }
+
+        function startPhonologicalReading(text, stringSpeed, whitespaceSpeed) {
+            var displayArea = document.getElementById('display-area');
+
+            function displayCharacter() {
+                if (index < text.length && !isPaused) {
+                    var char = text[index];
+
+                    // Exclude dashes from displaying
+                    if (char === '-') {
+                        // Skip dashes and proceed to the next character
+                        index++;
+                        displayCharacter();
+                    } else {
+                        displayArea.innerHTML += char;
+
+                        if (char === ' ') {
+                            setTimeout(displayCharacter, parseInt(whitespaceSpeed));
+                        } else {
+                            setTimeout(displayCharacter, parseInt(stringSpeed));
+                        }
+
+                        index++;
+                    }
+                }
+            }
+
+            // Start the phonological reading
+            displayCharacter();
+        }
+
+        // Toggle pause/resume
+        function togglePause() {
+            isPaused = !isPaused;
+            clearTimeout(displayTimeout);
+            if (!isPaused) {
+                // Resume reading
+                startPhonologicalReading(originalText, originalStringSpeed, originalWhitespaceSpeed);
+            }
+        }
+
+        // Go back to the first page
+        function goBackToPage1() {
+            // Restore the original text and settings
+            document.body.innerHTML = `
+                <h1>Reading Assistant</h1>
+                <label for="text-input">Paste your text:</label>
+                <textarea id="text-input" placeholder="Enter text here...">${originalText}</textarea>
+
+                <label for="modality">Select modality:</label>
+                <select id="modality">
+                    <option value="phonological">Phonological</option>
+                </select>
+
+                <label for="string-speed">String speed (milliseconds):</label>
+                <input type="number" id="string-speed" value="${originalStringSpeed}">
+
+                <label for="whitespace-speed">Whitespace speed (milliseconds):</label>
+                <input type="number" id="whitespace-speed" value="${originalWhitespaceSpeed}">
+
+                <label for="font-size">Font size:</label>
+                <input type="number" id="font-size" value="${originalFontSize}">
+
+                <label for="line-spacing">Line spacing:</label>
+                <input type="number" id="line-spacing" value="${originalLineSpacing}">
+
+                <button onclick="startReading()">Start Reading</button>
+            `;
+        }
+    </script>
+</body>
+</html>
